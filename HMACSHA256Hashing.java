@@ -3,7 +3,8 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.RowFactory;
-import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.types.*;
+import org.apache.spark.sql.catalyst.encoders.RowEncoder;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -13,7 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Base64;
 
-public class HMACSHA256Hashing {
+public class DynamicSchemaConversion {
 
     // Method to perform HMAC SHA256 hashing
     public static String hash(int value, String secret) throws Exception {
@@ -27,7 +28,7 @@ public class HMACSHA256Hashing {
 
     public static void main(String[] args) {
         SparkSession spark = SparkSession.builder()
-            .appName("HMAC SHA256 Hashing Example")
+            .appName("Dynamic Schema Conversion Example")
             .getOrCreate();
 
         // Example data
@@ -36,13 +37,30 @@ public class HMACSHA256Hashing {
         data.add(RowFactory.create(2, false));
         data.add(RowFactory.create(3, true));
 
-        Dataset<Row> df = spark.createDataFrame(data, 
-            Encoders.tuple(Encoders.INT(), Encoders.BOOLEAN()).schema());
+        StructType schema = new StructType(new StructField[]{
+            DataTypes.createStructField("x", DataTypes.IntegerType, false),
+            DataTypes.createStructField("y", DataTypes.BooleanType, false)
+        });
+
+        Dataset<Row> df = spark.createDataFrame(data, schema);
 
         // Secret key for HMAC SHA256
         final String secret = "your-secret-key";
 
-        // Apply mapPartitions to hash the 'x' column
+        // Dynamically modify the schema to change 'x' from Integer to String
+        StructType newSchema = new StructType(
+            Arrays.stream(schema.fields())
+                .map(field -> {
+                    if (field.name().equals("x") && field.dataType() == DataTypes.IntegerType) {
+                        return DataTypes.createStructField("x", DataTypes.StringType, field.nullable());
+                    } else {
+                        return field;
+                    }
+                })
+                .toArray(StructField[]::new)
+        );
+
+        // Apply mapPartitions with dynamic schema conversion
         Dataset<Row> hashedDF = df.mapPartitions(new MapPartitionsFunction<Row, Row>() {
             @Override
             public Iterator<Row> call(Iterator<Row> input) throws Exception {
@@ -56,7 +74,7 @@ public class HMACSHA256Hashing {
                 }
                 return output.iterator();
             }
-        }, RowEncoder.apply(df.schema()));
+        }, RowEncoder.apply(newSchema)); // Use the dynamically created schema
 
         hashedDF.show();
     }
