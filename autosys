@@ -1,0 +1,2 @@
+insert_job: my_job_name
+command: "my_java_command.sh $(echo $GLOBAL_DATE | awk '{print substr($0,7,2) substr($0,5,2) substr($0,1,4)}')"
