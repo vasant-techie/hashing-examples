@@ -1,0 +1,63 @@
+{
+	"sparkSchema": {
+		"type": "struct",
+		"fields": [
+			{
+				"name": "audit_id",
+				"type": "int"
+			},
+			{
+				"name": "action_taken",
+				"type": "string"
+			},
+			{
+				"name": "action_take_by_ts",
+				"type": "timestamp"
+			},
+			{
+				"name": "action_take_by_nm",
+				"type": "string"
+			},
+			{
+				"name": "audit_data_txt",
+				"type": {
+					"type": "struct",
+					"fields": [
+						{
+							"name": "comment",
+							"type": "string",
+							"metadata": {},
+							"nullable": true
+						}
+					]
+				},
+				"metadata": {},
+				"nullable": true
+			},
+			{
+				"name": "create_by_ts",
+				"type": "timestamp"
+			},
+			{
+				"name": "create_by_nm",
+				"type": "string"
+			},
+			{
+				"name": "last_update_by_ts",
+				"type": "timestamp"
+			},
+			{
+				"name": "last_update_by_nm",
+				"type": "string"
+			},
+			{
+				"name": "user_role",
+				"type": "string"
+			},
+			{
+				"name": "case_id",
+				"type": "int"
+			}
+		]
+	}
+}
